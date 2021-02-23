@@ -1,16 +1,16 @@
 # Signal Processing
 ### Utils
 
-
 ```python
 import pandas as pd
-from util import *
-step_meters=4.5
-files = ["Device1","Device2","Device3"]
+from scripts.util import *
+
+step_meters = 4.5
+files = ["Device1", "Device2", "Device3"]
 stats = []
 for filename in files:
     # open file and read RSSI signal
-    input_file = pd.read_csv("data/"+filename+".csv")
+    input_file = pd.read_csv("data/" + filename + ".csv")
     signal = input_file['rssi']
     distance = input_file['distance']
 
@@ -26,35 +26,36 @@ for filename in files:
     distance_infered = rssi_to_distance(signal, C)
     distance_infered_median = rssi_to_distance(signal_median, C)
 
-    stats.append((filename,signal,distance,signal_median,steps,C,
-                  log_of_distance_discrete,log_of_distance_raw,
-                  distance_infered,distance_infered_median,residual))
+    stats.append((filename, signal, distance, signal_median, steps, C,
+                  log_of_distance_discrete, log_of_distance_raw,
+                  distance_infered, distance_infered_median, residual))
 
 
 def graph(index):
-    _filename, _signal, _distance, _signal_median, _steps, _C, _log_of_distance_discrete, _log_of_distance_raw, _distance_infered, _distance_infered_median, _residual = stats[index]
+    _filename, _signal, _distance, _signal_median, _steps, _C, _log_of_distance_discrete, _log_of_distance_raw, _distance_infered, _distance_infered_median, _residual =
+    stats[index]
     # Graph it All!
     plot_signals([_signal, _log_of_distance_raw], [_filename, 'log_regression'],
                  xlabel="Meters", ylabel="Signal",
                  title="Signal vs Distance C=" +
-                 str(_C) + " R%= " + str(_residual),
+                       str(_C) + " R%= " + str(_residual),
                  xi=_distance * step_meters)
 
     plot_signals([_signal_median, _log_of_distance_discrete], [_filename, 'log_regression'],
                  title="Signal Median vs "
-                 "Distance  C=" +str(_C) +
-                " R%= " + str(_residual), xi=_steps)
+                       "Distance  C=" + str(_C) +
+                       " R%= " + str(_residual), xi=_steps)
 
     plot_signals([_distance_infered, rssi_to_distance(_log_of_distance_raw, _C)], [_filename, 'log_regression'],
                  xlabel="Step Measurement", ylabel="Predicted Distance",
                  title="Inverse log, C=" +
-                 str(_C) + " R%= " + str(_residual),
+                       str(_C) + " R%= " + str(_residual),
                  xi=_distance)
 
     plot_signals([_distance_infered_median, rssi_to_distance(_log_of_distance_discrete, _C)],
                  [_filename, "log_regression"], xlabel="Step Measurement",
                  ylabel="Distance", title="Inverse Median C=" +
-                  str(_C) + " R%= " + str(_residual))
+                                          str(_C) + " R%= " + str(_residual))
 ```
 
 ### Device1

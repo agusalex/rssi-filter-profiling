@@ -4,11 +4,19 @@ import statistics
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
+from scripts.kalman import *
 
 
 def median(step):
     return [statistics.median(step)]
 
+
+def median_kalman(step):
+    return [statistics.median(KalmanFilter().kalman_filter(step))]
+
+
+def kalman(data):
+    return KalmanFilter().kalman_filter(data)
 
 def function_per_step(file, function):
     signal_in_steps = cut_signal_in_steps(file['rssi'].values, find_step_cuts(file.values))
@@ -54,7 +62,7 @@ def find_steps(distance, meters_per_step=1):
 
 def find_coeficient(distance, signal):
     C, residual = fit(distance_to_rssi, np.array(distance), np.array(signal))
-    return round(C.item()), round(100-residual)
+    return round(C.item()), round(100 - residual)
 
 
 def log_fit(distance, c):

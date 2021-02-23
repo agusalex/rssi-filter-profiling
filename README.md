@@ -2,7 +2,8 @@
 
 ## Getting Started
 
-
+![first](data/index/output_5_0.png)
+![first](data/index/output_5_1.png)
 ### Project requirements 
 
 First step is to create one and install all necessary project requirements.
@@ -21,7 +22,7 @@ For example:
 
     main.py --file data/sample.csv
 
-
 ## Results
-
-After execution, the script will display results
+![first](data/index/output_5_2.png)
+![first](data/index/output_5_3.png)
+![combined2](data/combined2.png)

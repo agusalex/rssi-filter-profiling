@@ -19,7 +19,7 @@ for filename in files:
     steps = np.array(find_steps(distance.values, meters_per_step=step_meters))
 
     # Fit Logarithmic curve of signal loss to median
-    C = find_coeficient(steps, signal_median)
+    C, residual = find_coeficient(steps, signal_median)
     log_of_distance_discrete = log_fit(steps, C)
     log_of_distance_raw = log_fit(distance * step_meters, C)
     # Inverse of logarithmic function to visualize distance over signal, make it lineal
@@ -28,26 +28,33 @@ for filename in files:
 
     stats.append((filename,signal,distance,signal_median,steps,C,
                   log_of_distance_discrete,log_of_distance_raw,
-                  distance_infered,distance_infered_median))
+                  distance_infered,distance_infered_median,residual))
 
 
 def graph(index):
-    _filename, _signal, _distance, _signal_median, _steps, _C, _log_of_distance_discrete, _log_of_distance_raw, _distance_infered, _distance_infered_median = stats[index]
+    _filename, _signal, _distance, _signal_median, _steps, _C, _log_of_distance_discrete, _log_of_distance_raw, _distance_infered, _distance_infered_median, _residual = stats[index]
     # Graph it All!
-    plot_signals([_signal, _log_of_distance_raw], [_filename, 'log_regression'], xlabel="Meters", ylabel="Signal",
-                 title="Signal vs Distance C=" + str(_C),
+    plot_signals([_signal, _log_of_distance_raw], [_filename, 'log_regression'],
+                 xlabel="Meters", ylabel="Signal",
+                 title="Signal vs Distance C=" +
+                 str(_C) + " R%= " + str(_residual),
                  xi=_distance * step_meters)
+
     plot_signals([_signal_median, _log_of_distance_discrete], [_filename, 'log_regression'],
-                 title="Signal Median vs Distance  C=" + str(_C), xi=_steps)
+                 title="Signal Median vs "
+                 "Distance  C=" +str(_C) +
+                " R%= " + str(_residual), xi=_steps)
 
     plot_signals([_distance_infered, rssi_to_distance(_log_of_distance_raw, _C)], [_filename, 'log_regression'],
                  xlabel="Step Measurement", ylabel="Predicted Distance",
-                 title="Inverse log, C=" + str(_C),
+                 title="Inverse log, C=" +
+                 str(_C) + " R%= " + str(_residual),
                  xi=_distance)
 
-    plot_signals([_distance_infered_median, rssi_to_distance(_log_of_distance_discrete, _C)], [_filename, "log_regression"],
-                 xlabel="Step Measurement",
-                 ylabel="Distance", title="Inverse Median")
+    plot_signals([_distance_infered_median, rssi_to_distance(_log_of_distance_discrete, _C)],
+                 [_filename, "log_regression"], xlabel="Step Measurement",
+                 ylabel="Distance", title="Inverse Median C=" +
+                  str(_C) + " R%= " + str(_residual))
 ```
 
 ### Device1
@@ -152,7 +159,7 @@ log_of_distance_discrete_all = []
 filenames = []
 steps_all = []
 for i in range(len(stats)):
-    filename_i, signal_i, distance_i, signal_median_i, steps_i, C_i, log_of_distance_discrete_i, log_of_distance_raw_i, distance_infered_i,distance_infered_median_i = stats[i]
+    filename_i, signal_i, distance_i, signal_median_i, steps_i, C_i, log_of_distance_discrete_i, log_of_distance_raw_i, distance_infered_i,distance_infered_median_i,residual_i = stats[i]
     C_all.append(C_i)
     log_of_distance_discrete_all.append(log_of_distance_discrete_i)
     filenames.append(filename_i)
@@ -163,6 +170,7 @@ log_of_distance_discrete_all[2] = log_fit(np.array(steps_all[0]), C_all[2])
 
 plot_signals(log_of_distance_discrete_all, filenames, xlabel="Meters", ylabel="Signal",
                  title="Signal vs Distance",xi=steps_all[0])
+
 ```
 
 
@@ -170,8 +178,3 @@ plot_signals(log_of_distance_discrete_all, filenames, xlabel="Meters", ylabel="S
 ![png](output_9_0.png)
     
 
-
-
-```python
-
-```

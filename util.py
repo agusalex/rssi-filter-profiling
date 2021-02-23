@@ -53,7 +53,8 @@ def find_steps(distance, meters_per_step=1):
 
 
 def find_coeficient(distance, signal):
-    return fit(distance_to_rssi, np.array(distance), np.array(signal)).item()
+    C, residual = fit(distance_to_rssi, np.array(distance), np.array(signal))
+    return round(C.item()), round(100-residual)
 
 
 def log_fit(distance, c):
@@ -77,11 +78,10 @@ def rssi_to_distance(x_values, c):
     return y_values
 
 
-# TODO st error
 def fit(func, x_values, y_values):
     popt, pcov = curve_fit(func, x_values, y_values)
-    # Standard Error print(np.sqrt(np.diag(pcov)))
-    return popt
+    residual = np.linalg.norm(y_values - func(x_values, *popt))
+    return popt, residual
 
 
 def median_filter(data, w_size=13):
@@ -119,7 +119,7 @@ def window(data, w_size):
     return windows
 
 
-def plot_signals(yi, labels, ylabel="RSSI", xlabel="Distance", title="RSSI over Distance", xi=None, ):
+def plot_signals(yi, labels, ylabel="Y", xlabel="X", title="RSSI over Distance", xi=None, ):
     """
 
     Auxiliary function for plotting

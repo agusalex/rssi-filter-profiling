@@ -51,7 +51,7 @@ def find_step_cuts(file):
 
 
 def find_steps(distance, meters_per_step=1):
-    steps = [0.1]
+    steps = [distance[0]]
     index = distance[0]
     for step in distance:
         if step != index:

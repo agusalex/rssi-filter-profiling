@@ -19,7 +19,7 @@ if __name__ == '__main__':
     _distance = _file['distance']
 
     # Find Median, Find steps
-    _signal_median = function_per_step(_file, median_kalman)
+    _signal_median = function_per_step(_file, median)
     _steps = np.array(find_steps(_distance.values, meters_per_step=step_meters))
 
     # Fit Logarithmic curve of signal loss to median

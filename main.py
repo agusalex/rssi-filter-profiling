@@ -5,12 +5,12 @@ from scripts.util import *
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Filtering strategies for rssi time series')
-    parser.add_argument('--file', nargs='?', help='data filename', default='data/Device1.csv')
+    parser.add_argument('--file', nargs='?', help='data filename', default='data/simulation.csv')
 
     args = parser.parse_args()
 
     _filename = args.file
-    step_meters = 4.5
+    step_meters = 1
     # open file and read RSSI signal
 
     _file = pd.read_csv(_filename)
@@ -23,13 +23,14 @@ if __name__ == '__main__':
     _steps = np.array(find_steps(_distance.values, meters_per_step=step_meters))
 
     # Fit Logarithmic curve of signal loss to median
-    _C, _residual = find_coeficient(_steps, _signal_median)
+    # _C, _residual = find_coeficient(_steps, _signal_median)
+    c2, n, _residual2 = find_coeficient_adaptive(_steps, _signal_median)
 
-    _log_of_distance_discrete = log_fit(_steps, _C)
-    _log_of_distance_raw = log_fit(_distance * step_meters, _C)
+    _log_of_distance_discrete = log_fit_adaptive(_steps, c2, n)
+    _log_of_distance_raw = log_fit_adaptive(_distance * step_meters, c2, n)
     # Inverse of logarithmic function to visualize distance over signal, make it lineal
-    _distance_infered = rssi_to_distance(_signal_kalman, _C)
-    _distance_infered_median = rssi_to_distance(_signal_median, _C)
+   # _distance_infered = rssi_to_distance(_signal_kalman, c2)
+   # _distance_infered_median = rssi_to_distance(_signal_median, c2)
 
     # Graph it All!
 
@@ -40,19 +41,19 @@ if __name__ == '__main__':
     plot_signals([_signal_kalman, _log_of_distance_raw], [_filename, 'log_regression'], xlabel="Meters",
                  ylabel="Signal",
                  title="Signal vs Distance C=" +
-                       str(_C) + " R%= " + str(_residual),
+                       str(c2) + " N= " + str(n) + " R%= " + str(_residual2),
                  xi=_distance * step_meters)
 
     plot_signals([_signal_median, _log_of_distance_discrete], [_filename, 'log_regression'], title="Signal Median vs "
-                 "Distance  C=" + str(_C) + " R%= " + str(_residual),xi=_steps)
+                 "Distance  C=" + str(c2) + " N= " + str(n) + " R%= " + str(_residual2),xi=_steps)
 
-    plot_signals([_distance_infered,kalman(_distance_infered), rssi_to_distance(_log_of_distance_raw, _C)], [_filename, "kalman",'log_regression'],
-                 xlabel="Step Measurement", ylabel="Predicted Distance",
-                 title="Inverse log, C=" +
-                       str(_C) + " R%= " + str(_residual),
-                 xi=_distance)
+   # plot_signals([_distance_infered,kalman(_distance_infered), rssi_to_distance(_log_of_distance_raw, _C)], [_filename, "kalman",'log_regression'],
+   #              xlabel="Step Measurement", ylabel="Predicted Distance",
+   #              title="Inverse log, C=" +
+   #                    str(_C) + " R%= " + str(_residual),
+   #              xi=_distance)
 
-    plot_signals([_distance_infered_median, rssi_to_distance(_log_of_distance_discrete, _C)],
-                 [_filename, "log_regression"], xlabel="Step Measurement",
-                 ylabel="Distance", title="Inverse Median C=" +
-                                          str(_C) + " R%= " + str(_residual))
+    # plot_signals([_distance_infered_median, rssi_to_distance(_log_of_distance_discrete, _C)],
+    #             [_filename, "log_regression"], xlabel="Step Measurement",
+    #             ylabel="Distance", title="Inverse Median C=" +
+    #                                      str(_C) + " R%= " + str(_residual))

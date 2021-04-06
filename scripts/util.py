@@ -18,6 +18,7 @@ def median_kalman(step):
 def kalman(data):
     return KalmanFilter().kalman_filter(data)
 
+
 def function_per_step(file, function):
     signal_in_steps = cut_signal_in_steps(file['rssi'].values, find_step_cuts(file.values))
     filtered = []
@@ -60,29 +61,30 @@ def find_steps(distance, meters_per_step=1):
     return steps
 
 
-def find_coeficient(distance, signal):
-    C, residual = fit(distance_to_rssi, np.array(distance), np.array(signal))
-    return round(C.item()), round(100 - residual)
-
-
-def log_fit(distance, c):
-    return distance_to_rssi(distance, c)
-
-
 def linear_fit(signal):
     m, b = np.polyfit(range(0, len(signal)), signal, 1)
     return m * range(0, len(signal)) + b
 
 
+def find_coeficient(distance, signal):
+    result, residual = fit(distance_to_rssi, np.array(distance), np.array(signal))
+    print(result)
+    return round(result[0]), round(result[1]), round(100 - residual)
+
+
+def log_fit(distance, c, n):
+    return distance_to_rssi(distance, c, n)
+
+
 # objective function
-def distance_to_rssi(x, c):
-    return c - 20 * np.log10(4 * np.pi * x)
+def distance_to_rssi(x, c, n):
+    return - n * np.log10(x) - c
 
 
-def rssi_to_distance(x_values, c):
+def rssi_to_distance(x_values, c, n):
     y_values = []
     for x in x_values:
-        y_values.append((2 ** ((-x + c - 40) / 20) * 5 ** (-(x - c) / 20)) / np.pi)
+        y_values.append(10 ** ((-x + c) / n))
     return y_values
 
 

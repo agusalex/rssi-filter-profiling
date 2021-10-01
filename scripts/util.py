@@ -1,8 +1,10 @@
 import copy
 import statistics
 
+import lmfit
 import matplotlib.pyplot as plt
 import numpy as np
+from lmfit import Minimizer, Parameters, fit_report
 from scipy.optimize import curve_fit
 from scripts.kalman import *
 
@@ -66,32 +68,61 @@ def linear_fit(signal):
     return m * range(0, len(signal)) + b
 
 
-def find_coeficient(distance, signal):
-    result, residual = fit(distance_to_rssi, np.array(distance), np.array(signal))
+def find_coeficient_adapter(params, distance, signal):
+    rt = 100 - find_coeficient(distance, signal, params['C'], params['N'], params['B'])[3]
+    return rt
+
+
+def find_coeficient(distance, signal,  C=35.5510920, N=29.0735592, B=11.8099735):
+    initial_guess = dict(c=C, n=N, b=B)
+    print(int(C), int(N), int(B))
+
+    regressor = lmfit.Model(distance_to_rssi)
+    results = regressor.fit(signal, x=np.array(distance), **initial_guess, method="slsqp")
+    residual = np.linalg.norm(signal - distance_to_rssi(distance,
+                                                        results.values['c'],
+                                                        results.values['n'],
+                                                        results.values['b']))
+
+    # print(fit_report(results))
+    print("R = " + str(100 - residual) + " Result" + str(results.values))
+    if results.values['b'] < 2:
+        return results.values['c'], results.values['n'], 2, 100 - residual
+    return results.values['c'], results.values['n'], results.values['b'], 100 - residual
+
+
+def brute_force_coef(distance, signal):
+    params = Parameters()
+    params.add_many(
+        ('C', 2, True),
+        ('N', 2, True),
+        ('B', 2, True))
+
+    params['C'].set(min=1, max=100, brute_step=3)
+    params['N'].set(min=1, max=100, brute_step=3)
+    params['B'].set(min=2, max=100, brute_step=3)
+    fitter = Minimizer(find_coeficient_adapter, params,
+                       fcn_args=(distance, signal))
+    result = fitter.minimize(method='brute')
     print(result)
-    return round(result[0]), round(result[1]), round(100 - residual)
 
 
-def log_fit(distance, c, n):
-    return distance_to_rssi(distance, c, n)
+def log_fit(distance, c, n, b):
+    return distance_to_rssi(distance, c, n, b)
 
 
 # objective function
-def distance_to_rssi(x, c, n):
-    return - n * np.log10(x) - c
+def distance_to_rssi(x, c, n, b):
+    if b < 2:
+        return - n * (np.log10(x) / np.log10(2)) - c
+    return - n * (np.log10(x) / np.log10(b)) - c
 
 
-def rssi_to_distance(x_values, c, n):
+def rssi_to_distance(x_values, c, n, b):
     y_values = []
     for x in x_values:
-        y_values.append(10 ** ((-x + c) / n))
+        y_values.append(b ** (-1 * (x + c) / n))
     return y_values
-
-
-def fit(func, x_values, y_values):
-    popt, pcov = curve_fit(func, x_values, y_values)
-    residual = np.linalg.norm(y_values - func(x_values, *popt))
-    return popt, residual
 
 
 def median_filter(data, w_size=13):

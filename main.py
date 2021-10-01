@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     # Fit Logarithmic curve of signal loss to median and find c and n
     _C, _n, _b, _residual = find_coeficient(_steps, _signal_median)
-    brute_force_coef(_steps, _signal_median)
+
     # Find the predicted y's for each of our steps
     _log_of_distance_discrete = distance_to_rssi(_steps, _C, _n, _b)
     # Find the predicted y's for each of all our dataset of distances (non discrete)

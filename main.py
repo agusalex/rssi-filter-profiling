@@ -11,7 +11,7 @@ def func_log(x, a, c):
 
 
 def compute_graph_data(_filename, graph_or_not):
-    step_meters = 1
+    step_meters = 4
     # open file and read RSSI signal
     file = pd.read_csv(_filename)
     _signal = file['rssi']
@@ -26,7 +26,7 @@ def compute_graph_data(_filename, graph_or_not):
     # find steps
     _steps = np.array(find_steps(_distance.values, meters_per_step=step_meters))
     # Apply median filter to raw data in discrete steps
-    _signal_median = function_per_step(file, median)
+    _signal_median = function_per_step(file, mean)
     # Apply kalman filter to raw data in discrete steps
     # _signal_kalman = function_per_step(file, kalman)
     # Fit Logarithmic curve of signal loss to median and find c and n
@@ -63,14 +63,14 @@ def compute_graph_data(_filename, graph_or_not):
                      ylabel="Distance", title="Inverse Log Median C=" + str(round(
                 _C)) + " R%= " + str(round(_residual)))
     log_canonical = rssi_to_distance_adaptive(range(1, 50), _C, _n, _b)
-    return _signal_median, _steps, _log_of_distance_discrete, _C, _residual, log_canonical
+    return _signal_median, _steps, _log_of_distance_discrete, _C, _n, _b, _residual, log_canonical
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Filtering strategies for rssi time series')
     parser.add_argument('--file', nargs='?', help='data filename',
-                        default='data/2022-04-26/192.168.4.2.csv,'
+                        default='data/2022-04-26/192.168.4.9.csv,'
                                 'data/2022-04-26/192.168.4.3.csv,'
                                 'data/2022-04-26/192.168.4.4.csv,'
                                 'data/2022-04-26/192.168.4.6.csv,'
@@ -80,17 +80,22 @@ if __name__ == '__main__':
     logs = []
     logs_canonical = []
     for filename in filenames:
-        signal_median, _steps, log_of_distance_discrete, _C, _residual, log_canonical = compute_graph_data(filename, False)
+        signal_median, _steps, log_of_distance_discrete, _C, _n, _b, _residual, log_canonical = compute_graph_data(
+            filename, False)
         logs.append(log_of_distance_discrete)
         logs_canonical.append(log_canonical)
-        plot_signals([signal_median, log_of_distance_discrete], [filename, 'log_regression'], title="Signal Median vs "+ "Distance  C=" + str(
-            round(_C)) + " R%= " + str(round(_residual)),
+        plot_signals([signal_median, log_of_distance_discrete], [filename, 'log_regression'],
+                     title=f"Signal Median "
+                           f"vs Distance  "
+                           f"C= {str(round(_C))}"
+                           f" N= {str(round(_n))}"
+                           f" B= {str(round(_b))}"
+                           f" R%={str(round(_residual))}",
                      xlabel="Meters",
                      ylabel="Signal Median",
                      xi=_steps)
 
     if len(filenames) > 1:
-
         plot_signals(logs, labels=filenames, title="Logs applied to each distance captured",
                      xlabel="Meters",
                      ylabel="Signal Median",

@@ -12,6 +12,10 @@ def median(step):
     return [statistics.median(step)]
 
 
+def mean(step):
+    return [statistics.mean(step)]
+
+
 def median_kalman(step):
     return [statistics.median(KalmanFilter().kalman_filter(step))]
 
@@ -112,7 +116,6 @@ def rssi_to_distance_adaptive(x_values, c, n, b):
     for x in x_values:
         y_values.append(b ** (-1 * (x + c) / n))
     return y_values
-
 
 
 def rssi_to_distance(x_values, c):

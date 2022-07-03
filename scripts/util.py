@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
 from scripts.kalman import *
+import pandas as pd
 
 
 def median(step):
@@ -22,6 +23,24 @@ def median_kalman(step):
 
 def kalman(data):
     return KalmanFilter().kalman_filter(data)
+
+
+def create_steps(file):
+    sequence = file['sequence']
+    distance_pre = sequence.apply(lambda x: round(x / 300) - (sequence[0] / 300) + 1)
+    file_edited = pd.DataFrame({"distance": distance_pre, "rssi": file['rssi']})
+    _distance = file_edited["distance"]
+    file = file_edited
+    return file
+
+
+def prepare_signal(_filename):
+    file = pd.read_csv(_filename)
+    _signal = file['rssi']
+    if 'sequence' in file:
+        file = create_steps(file)
+    _distance = file["distance"]
+    return _signal, _distance, file
 
 
 def function_per_step(file, function):
@@ -66,62 +85,35 @@ def find_steps(distance, meters_per_step=1):
     return steps
 
 
-def find_coeficient(distance, signal):
-    C, residual = fit(distance_to_rssi, np.array(distance), np.array(signal))
-    return round(C.item()), round(100 - residual)
-
-
-def log_fit(distance, c):
-    return distance_to_rssi(distance, c)
-
-
-def linear_fit(signal):
-    m, b = np.polyfit(range(0, len(signal)), signal, 1)
-    return m * range(0, len(signal)) + b
-
-
-def find_coeficient_adaptive(distance, signal, C=35.5510920, N=29.0735592, B=11.8099735):
-    initial_guess = dict(c=C, n=N, b=B)
-    print(int(C), int(N), int(B))
+def fit_parameters(distance, signal, C=35.5510920, N=29.0735592) -> object:
+    initial_guess = dict(c=C, n=N)
+    print(int(C), int(N))
 
     regressor = lmfit.Model(distance_to_rssi_adaptive)
     results = regressor.fit(signal, x=np.array(distance), **initial_guess, method="slsqp")
     residual = np.linalg.norm(signal - distance_to_rssi_adaptive(distance,
                                                                  results.values['c'],
-                                                                 results.values['n'],
-                                                                 results.values['b']))
+                                                                 results.values['n']))
     print("R = " + str(100 - residual) + " Result" + str(results.values))
-    if results.values['b'] < 2:
-        return results.values['c'], results.values['n'], 2, 100 - residual
-    return results.values['c'], results.values['n'], results.values['b'], 100 - residual
+    return results.values['c'], results.values['n'], 100 - residual
 
 
-def log_fit_adaptive(distance, c, n, b):
-    return distance_to_rssi_adaptive(distance, c, n, b)
+def log_fit_adaptive(distance, c, n):
+    return distance_to_rssi_adaptive(distance, c, n)
 
 
-# objective function
-def distance_to_rssi(x, c):
-    return c - 20 * np.log10(4 * np.pi * x)
-
-
-def distance_to_rssi_adaptive(x, c, n, b):
+def distance_to_rssi_adaptive(x, c, n):
+    b = 10
     if b < 2:
         return - n * (np.log10(x) / np.log10(2)) - c
-    return - n * (np.log10(x) / np.log10(b)) - c
+    return - (n * np.log2(x) / np.log2(b)) - c
 
 
-def rssi_to_distance_adaptive(x_values, c, n, b):
+def rssi_to_distance_adaptive(x_values, c, n):
+    b = 10
     y_values = []
     for x in x_values:
         y_values.append(b ** (-1 * (x + c) / n))
-    return y_values
-
-
-def rssi_to_distance(x_values, c):
-    y_values = []
-    for x in x_values:
-        y_values.append((2 ** ((-x + c - 40) / 20) * 5 ** (-(x - c) / 20)) / np.pi)
     return y_values
 
 

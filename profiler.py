@@ -10,35 +10,27 @@ def func_log(x, a, c):
     return -a * np.log10(x) - c
 
 
-def compute_graph_data(_filename, graph_or_not):
-    step_meters = 4
+def signal_profiling(_filename, graph_or_not):
     # open file and read RSSI signal
-    file = pd.read_csv(_filename)
-    _signal = file['rssi']
-    if 'sequence' in file:
-        sequence = file['sequence']
-        distance_pre = sequence.apply(lambda x: round(x / 300) - (sequence[0] / 300) + 1)
-        file_edited = pd.DataFrame({"distance": distance_pre, "rssi": _signal})
-        _distance = file_edited["distance"]
-        file = file_edited
-    else:
-        _distance = file["distance"]
+    step_meters = 1
+    _signal, _distance, file = prepare_signal(_filename)
+
     # find steps
     _steps = np.array(find_steps(_distance.values, meters_per_step=step_meters))
     # Apply median filter to raw data in discrete steps
-    _signal_median = function_per_step(file, mean)
+    signal_mean = function_per_step(file, mean)
     # Apply kalman filter to raw data in discrete steps
     # _signal_kalman = function_per_step(file, kalman)
     # Fit Logarithmic curve of signal loss to median and find c and n
-    _C, _n, _b, _residual = find_coeficient_adaptive(_steps, _signal_median)
+    _C, _n, _residual = fit_parameters(_steps, signal_mean)
     # Find the predicted y's for each of our steps
-    _log_of_distance_discrete = distance_to_rssi_adaptive(_steps, _C, _n, _b)
+    _log_of_distance_discrete = distance_to_rssi_adaptive(_steps, _C, _n)
     # Find the predicted y's for each of all our dataset of distances (non discrete)
-    _log_of_distance_raw = distance_to_rssi_adaptive(_distance * step_meters, _C, _n, _b)
+    _log_of_distance_raw = distance_to_rssi_adaptive(_distance * step_meters, _C, _n)
     # Inverse of logarithmic function to visualize distance over signal median, make it lineal
-    _distance_infered_median = rssi_to_distance_adaptive(_signal_median, _C, _n, _b)
+    _distance_infered_median = rssi_to_distance_adaptive(signal_mean, _C, _n)
     # Inverse of logarithmic function to visualize distance over signal, make it lineal
-    _distance_infered = rssi_to_distance_adaptive(_signal, _C, _n, _b)
+    _distance_infered = rssi_to_distance_adaptive(_signal, _C, _n)
     # Graph it all!!
     if graph_or_not:
         plot_signals([_signal], [filenames, 'Signal Kalman'], xlabel="Meters",
@@ -47,41 +39,39 @@ def compute_graph_data(_filename, graph_or_not):
                            str(round(_C)) + " R%= " + str(
                          round(_residual)),
                      xi=_distance)
-        plot_signals([_signal_median, _log_of_distance_discrete], [filenames, 'log_regression'],
+        plot_signals([signal_mean, _log_of_distance_discrete], [filenames, 'log_regression'],
                      title="Signal Median vs "
-                           "Distance  C=" +
-                           str(round(_C)) + " R%= " + str(round(_residual)),
+                           f"vs Distance  "
+                           f"C= {str(round(_C))}"
+                           f" N= {str(round(_n))}"
+                           f" R%={str(round(_residual))}",
                      xlabel="Meters",
                      ylabel="Signal Median",
                      xi=_steps)
-        plot_signals([_distance_infered, rssi_to_distance_adaptive(_log_of_distance_raw, _C, _n, _b)],
+        plot_signals([_distance_infered, rssi_to_distance_adaptive(_log_of_distance_raw, _C, _n)],
                      [filenames, 'log_regression'],
                      xlabel="Step Measurement", ylabel="Predicted Distance",
                      title="Inverse log, C=" + str(round(_C)) + " R%= " + str(round(_residual)), xi=_distance)
-        plot_signals([_distance_infered_median, rssi_to_distance_adaptive(_log_of_distance_discrete, _C, _n, _b)],
+        plot_signals([_distance_infered_median, rssi_to_distance_adaptive(_log_of_distance_discrete, _C, _n)],
                      [filenames, "log_regression"], xlabel="Step Measurement",
                      ylabel="Distance", title="Inverse Log Median C=" + str(round(
                 _C)) + " R%= " + str(round(_residual)))
-    log_canonical = rssi_to_distance_adaptive(range(1, 50), _C, _n, _b)
-    return _signal_median, _steps, _log_of_distance_discrete, _C, _n, _b, _residual, log_canonical
+    log_canonical = rssi_to_distance_adaptive(range(1, 50), _C, _n)
+    return signal_mean, _steps, _log_of_distance_discrete, _C, _n, _residual, log_canonical
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Filtering strategies for rssi time series')
     parser.add_argument('--file', nargs='?', help='data filename',
-                        default='data/2022-04-26/192.168.4.9.csv,'
-                                'data/2022-04-26/192.168.4.3.csv,'
-                                'data/2022-04-26/192.168.4.4.csv,'
-                                'data/2022-04-26/192.168.4.6.csv,'
-                                'data/2022-04-26/192.168.4.8.csv')
+                        default='data/2022-04-26/192.168.4.9.csv')
     args = parser.parse_args()
     filenames = str(args.file).split(",")
     logs = []
     logs_canonical = []
     for filename in filenames:
-        signal_median, _steps, log_of_distance_discrete, _C, _n, _b, _residual, log_canonical = compute_graph_data(
-            filename, False)
+        signal_median, _steps, log_of_distance_discrete, _C, _n, _residual, log_canonical = signal_profiling(
+            filename, True)
         logs.append(log_of_distance_discrete)
         logs_canonical.append(log_canonical)
         plot_signals([signal_median, log_of_distance_discrete], [filename, 'log_regression'],
@@ -89,7 +79,6 @@ if __name__ == '__main__':
                            f"vs Distance  "
                            f"C= {str(round(_C))}"
                            f" N= {str(round(_n))}"
-                           f" B= {str(round(_b))}"
                            f" R%={str(round(_residual))}",
                      xlabel="Meters",
                      ylabel="Signal Median",

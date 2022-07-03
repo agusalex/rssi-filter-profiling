@@ -55,7 +55,7 @@ if __name__ == '__main__':
     first = True
     for new_file_data in files.values():
         if first or split:
-            new_file_data["file"].writerow(["sender", "sequence", "rssi"])
+            new_file_data["file"].writerow(["node", "sequence", "rssi"])
             first = False
         for row in new_file_data["rows"]:
             if row["sequence"] <= min(max_ids):

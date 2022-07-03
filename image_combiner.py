@@ -8,14 +8,12 @@ from PIL import Image
 
 if __name__ == '__main__':
     PATH = r"."
+    os.chdir(PATH)
+    images = glob.glob("*.png")
 
     frame_width = 1920
     images_per_row = 3
     padding = 2
-
-    os.chdir(PATH)
-
-    images = glob.glob("*.png")
 
     img_width, img_height = Image.open(images[0]).size
     scaled_img_width = ceil(img_width)

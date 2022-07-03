@@ -25,20 +25,28 @@ def kalman(data):
     return KalmanFilter().kalman_filter(data)
 
 
-def create_steps(file):
+def create_steps(file, first=None):
     sequence = file['sequence']
-    distance_pre = sequence.apply(lambda x: round(x / 300) - (sequence[0] / 300) + 1)
-    file_edited = pd.DataFrame({"distance": distance_pre, "rssi": file['rssi']})
+    if first is None:
+        start = (sequence[0] / 300)
+    else:
+        start = first / 300
+    distance_pre = sequence.apply(lambda x: round(round(x / 300) - start + 1))
+    if "node" in file:
+        file_edited = pd.DataFrame(
+            {"distance": distance_pre, "rssi": file['rssi'], "node": file["node"], "sequence": file["sequence"]})
+    else:
+        file_edited = pd.DataFrame({"distance": distance_pre, "rssi": file['rssi']})
     _distance = file_edited["distance"]
-    file = file_edited
+    file: pd.DataFrame = file_edited
     return file
 
 
-def prepare_signal(_filename):
-    file = pd.read_csv(_filename)
+def prepare_signal(_filename, first=None):
+    file: pd.DataFrame = pd.read_csv(_filename)
     _signal = file['rssi']
     if 'sequence' in file:
-        file = create_steps(file)
+        file = create_steps(file, first)
     _distance = file["distance"]
     return _signal, _distance, file
 
@@ -50,6 +58,18 @@ def function_per_step(file, function):
         for filtered_step in function(step):
             filtered.append(filtered_step)
     return filtered
+
+
+def apply_filter(row, function):
+    filtered = function(row)
+    return filtered[0]
+
+
+def function_per_step_inplace(df: pd.DataFrame, function):
+    group_distance = df.groupby(['distance'], as_index=False)['rssi'].apply(function)
+    new_df = df.drop(columns="rssi")
+    join = group_distance.merge(new_df, how='left', on='distance')
+    return join
 
 
 def cut_signal_in_steps(signal, cuts):
@@ -67,11 +87,18 @@ def find_step_cuts(file):
     cuttings = [0]
     index = file[0][0]
     cut = 0
-    for step, signal in file:
-        if step != index:
-            cuttings.append(cut)
-            index = step
-        cut += 1
+    if 'node' in file:
+        for step, signal, _, _ in file:
+            if step != index:
+                cuttings.append(cut)
+                index = step
+            cut += 1
+    else:
+        for step, signal, in file:
+            if step != index:
+                cuttings.append(cut)
+                index = step
+            cut += 1
     return cuttings
 
 

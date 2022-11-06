@@ -7,11 +7,12 @@ import argparse
 if __name__ == '__main__':
     key_index = "sender"
     order_index = "sequence"
-    max_cut = 66000  # math.inf
-    min_cut = 47008  # 0
+    overlap_required = False
+    max_cut = math.inf  # math.inf 45024  45024
+    min_cut = 1000 # 0
     parser = argparse.ArgumentParser(
         description='Split and cut csv capture file ')
-    parser.add_argument('--file', nargs='?', help='data filename', default='out.csv')
+    parser.add_argument('--file', nargs='?', help='data filename', default='estralla.csv')
     parser.add_argument('--split', nargs='?', help='split into multiple files', default='True')
     args = parser.parse_args()
     split = args.split == "True"
@@ -58,5 +59,5 @@ if __name__ == '__main__':
             new_file_data["file"].writerow(["node", "sequence", "rssi"])
             first = False
         for row in new_file_data["rows"]:
-            if row["sequence"] <= min(max_ids):
+            if row["sequence"] <= min(max_ids) or not overlap_required:
                 new_file_data["file"].writerow(row)

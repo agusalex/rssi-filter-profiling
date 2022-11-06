@@ -1,4 +1,4 @@
-sender, sequence, rssi
+sender,sequence,rssi
 192.168.4.7, 33792, -65
 192.168.4.7, 33840, -62
 192.168.4.7, 33920, -63

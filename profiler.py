@@ -12,7 +12,8 @@ def func_log(x, a, c):
 
 def signal_profiling(_filename, graph_or_not):
     # open file and read RSSI signal
-    step_meters = 1
+    step_meters = 2.5
+    # for original experiment 4.5
     _signal, _distance, file = prepare_signal(_filename)
 
     # find steps
@@ -33,13 +34,13 @@ def signal_profiling(_filename, graph_or_not):
     _distance_infered = rssi_to_distance_adaptive(_signal, _C, _n)
     # Graph it all!!
     if graph_or_not:
-        plot_signals([_signal], [filenames, 'Signal Kalman'], xlabel="Meters",
+        plot_signals([_signal], [filename, 'Signal Kalman'], xlabel="Meters",
                      ylabel="Signal",
                      title="Signal and Signal Kalman vs Distance C=" +
                            str(round(_C)) + " R%= " + str(
                          round(_residual)),
                      xi=_distance)
-        plot_signals([signal_mean, _log_of_distance_discrete], [filenames, 'log_regression'],
+        plot_signals([signal_mean, _log_of_distance_discrete], [filename, 'log_regression'],
                      title="Signal Median vs "
                            f"vs Distance  "
                            f"C= {str(round(_C))}"
@@ -49,11 +50,11 @@ def signal_profiling(_filename, graph_or_not):
                      ylabel="Signal Median",
                      xi=_steps)
         plot_signals([_distance_infered, rssi_to_distance_adaptive(_log_of_distance_raw, _C, _n)],
-                     [filenames, 'log_regression'],
+                     [filename, 'log_regression'],
                      xlabel="Step Measurement", ylabel="Predicted Distance",
                      title="Inverse log, C=" + str(round(_C)) + " R%= " + str(round(_residual)), xi=_distance)
         plot_signals([_distance_infered_median, rssi_to_distance_adaptive(_log_of_distance_discrete, _C, _n)],
-                     [filenames, "log_regression"], xlabel="Step Measurement",
+                     [filename, "log_regression"], xlabel="Step Measurement",
                      ylabel="Distance", title="Inverse Log Median C=" + str(round(
                 _C)) + " R%= " + str(round(_residual)))
     log_canonical = rssi_to_distance_adaptive(range(1, 50), _C, _n)
@@ -64,14 +65,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Filtering strategies for rssi time series')
     parser.add_argument('--file', nargs='?', help='data filename',
-                        default='data/2022-04-26/192.168.4.9.csv')
+                        default='192.168.4.2.csv,192.168.4.3.csv,192.168.4.4.csv,192.168.4.6.csv,192.168.4.8.csv')
     args = parser.parse_args()
     filenames = str(args.file).split(",")
     logs = []
     logs_canonical = []
     for filename in filenames:
         signal_median, _steps, log_of_distance_discrete, _C, _n, _residual, log_canonical = signal_profiling(
-            filename, True)
+            filename, False)
         logs.append(log_of_distance_discrete)
         logs_canonical.append(log_canonical)
         plot_signals([signal_median, log_of_distance_discrete], [filename, 'log_regression'],
@@ -88,9 +89,11 @@ if __name__ == '__main__':
         plot_signals(logs, labels=filenames, title="Logs applied to each distance captured",
                      xlabel="Meters",
                      ylabel="Signal Median",
+                     xi=_steps
                      )
 
         plot_signals(logs_canonical, labels=filenames, title="Log canonical",
                      xlabel="x",
                      ylabel="Log",
+                     xi=_steps
                      )

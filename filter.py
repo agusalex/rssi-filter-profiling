@@ -14,7 +14,6 @@ def signal_analyzer(_filename):
     _signal_kalman = KalmanFilter().kalman_filter(_signal_median)
 
 
-
 def find_first_sequence(files):
     min = math.inf
     for file in files:
@@ -37,27 +36,33 @@ if __name__ == '__main__':
         description='Filtering strategies for rssi time series')
     parser.add_argument('--file', nargs='?', help='data filename',
                         default=",".join(filtered))
+    parser.add_argument('--apply', nargs='?', help='apply inplace',
+                        default=",".join(filtered))
     args = parser.parse_args()
     filenames: list[str] = str(args.file).split(",")
     first = find_first_sequence(filenames)
+    kalmans = []
     for filename in filenames:
-        #signal_analyzer(filename)
+        # signal_analyzer(filename)
         _, _, df = prepare_signal(filename, first=first)
         _mean = function_per_step_inplace(df, mean)
         signal_mean = _mean["rssi"]
 
-        _kalman_df = _mean.assign(rssi=KalmanFilter().kalman_filter(signal_mean))
+        _kalman_signal = KalmanFilter(0.01, 10, ).kalman_filter(df['rssi'])
 
-        plot_signals([df['rssi']], [filename, 'Signal'],
-                     ylabel="Signal",
-                     title="Signal",
+      #  plot_signals([df['rssi']], [filename, 'Signafl'],
+   #                  ylabel="Signal",
+    #                 title="Signal",
+     #                )
+        #plot_signals([signal_mean], [filename, 'Signal Mean'],
+        #             ylabel="Signal Mean",
+        #             title="Signal Mean",
+        #             )
+        plot_signals([df['rssi'], _kalman_signal], [filename, 'Signal Kalman'],
+                     ylabel="Signal Kalman",
+                     title="Signal Kalman",
                      )
-        plot_signals([signal_mean], [filename, 'Signal Mean'],
-                     ylabel="Signal Mean",
-                     title="Signal Mean",
-                     )
-        plot_signals([_kalman_df['rssi']], [filename, 'Signal Kalman'],
-                     ylabel="Signal Mean + Kalman",
-                     title="Signal Mean + Kalman",
-                     )
-        _kalman_df.to_csv(filename, encoding='utf-8', index=False)
+        df['rssi'] = _kalman_signal
+        df = df.drop(columns=['distance'], axis=1)
+        if args.apply == "y":
+            df.to_csv(filename, encoding='utf-8', index=False)

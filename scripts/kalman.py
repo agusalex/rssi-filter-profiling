@@ -24,7 +24,7 @@ class KalmanFilter:
     cov = float('nan')
     x = float('nan')
 
-    def __init__(self, R=0.008, Q=0.1):
+    def __init__(self, R=0.008, Q=0.1, A=1):
         """
         Constructor
         :param R: Process Noise

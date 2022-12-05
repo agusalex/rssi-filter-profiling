@@ -9,7 +9,7 @@ if __name__ == '__main__':
     order_index = "sequence"
     overlap_required = False
     max_cut = math.inf  # math.inf 45024  45024
-    min_cut = 1000 # 0
+    min_cut = 0 # 0
     parser = argparse.ArgumentParser(
         description='Split and cut csv capture file ')
     parser.add_argument('--file', nargs='?', help='data filename', default='estralla.csv')

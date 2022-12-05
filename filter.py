@@ -37,7 +37,7 @@ if __name__ == '__main__':
     parser.add_argument('--file', nargs='?', help='data filename',
                         default=",".join(filtered))
     parser.add_argument('--apply', nargs='?', help='apply inplace',
-                        default=",".join(filtered))
+                        default="n")
     args = parser.parse_args()
     filenames: list[str] = str(args.file).split(",")
     first = find_first_sequence(filenames)
@@ -58,11 +58,12 @@ if __name__ == '__main__':
         #             ylabel="Signal Mean",
         #             title="Signal Mean",
         #             )
-        plot_signals([df['rssi'], _kalman_signal], [filename, 'Signal Kalman'],
-                     ylabel="Signal Kalman",
-                     title="Signal Kalman",
-                     )
-        df['rssi'] = _kalman_signal
-        df = df.drop(columns=['distance'], axis=1)
-        if args.apply == "y":
+        if args.apply == "n":
+            plot_signals([df['rssi'], _kalman_signal], [filename, 'Signal Kalman'],
+                         ylabel="Signal Kalman",
+                         title="Signal Kalman",
+                         )
+        else:
+            df['rssi'] = _kalman_signal
+            df = df.drop(columns=['distance'], axis=1)
             df.to_csv(filename, encoding='utf-8', index=False)

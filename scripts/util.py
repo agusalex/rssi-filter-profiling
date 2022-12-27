@@ -112,32 +112,28 @@ def find_steps(distance, meters_per_step=1):
     return steps
 
 
-def fit_parameters(distance, signal, C=35.5510920, N=29.0735592) -> object:
-    initial_guess = dict(c=C, n=N)
+def fit_parameters(distance, signal, C=0, N=0) -> object:
+    initial_guess = dict(a=C, n=N)
     print(int(C), int(N))
 
     regressor = lmfit.Model(distance_to_rssi)
-    results = regressor.fit(signal, x=np.array(distance), **initial_guess, method="slsqp")
+    results = regressor.fit(signal, d=np.array(distance), **initial_guess, method="slsqp")
     residual = np.linalg.norm(signal - distance_to_rssi(distance,
-                                                        results.values['c'],
+                                                        results.values['a'],
                                                         results.values['n']))
     print("R = " + str(100 - residual) + " Result" + str(results.values))
-    return results.values['c'], results.values['n'], 100 - residual
+    return results.values['a'], results.values['n'], 100 - residual
 
 
-def log_fit_adaptive(distance, c, n):
-    return distance_to_rssi(distance, c, n)
+def distance_to_rssi(d, a, n):
+    return - (n * np.log10(d) + a)
 
 
-def distance_to_rssi(x, c, n):
-    return - n * np.log10(x) - c
-
-
-def rssi_to_distance(x_values, c, n):
-    y_values = []
-    for x in x_values:
-        y_values.append(10 ** (-1 * (x + c) / n))
-    return y_values
+def rssi_to_distance(rssi_values, a, n):
+    distances = []
+    for rssi in rssi_values:
+        distances.append(10 ** (-1 * (rssi + a) / n))
+    return distances
 
 
 def fit(func, x_values, y_values):

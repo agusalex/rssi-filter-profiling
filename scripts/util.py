@@ -27,11 +27,12 @@ def kalman(data):
 
 def create_steps(file, first=None):
     sequence = file['sequence']
+    group_by = 300
     if first is None:
-        start = (sequence[0] / 300)
+        start = (sequence[0] / group_by)
     else:
-        start = first / 300
-    distance_pre = sequence.apply(lambda x: round(round(x / 300) - start + 1))
+        start = first / group_by
+    distance_pre = sequence.apply(lambda x: round(round(x / group_by) - start + 1))
     if "node" in file:
         file_edited = pd.DataFrame(
             {"distance": distance_pre, "rssi": file['rssi'], "node": file["node"], "sequence": file["sequence"]})

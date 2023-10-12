@@ -11,9 +11,9 @@ if __name__ == '__main__':
     os.chdir(PATH)
     images = glob.glob("*.png")
 
-    frame_width = 1920
-    images_per_row = 3
-    padding = 2
+    frame_width = 1250
+    images_per_row = 2
+    padding = 0
 
     img_width, img_height = Image.open(images[0]).size
     scaled_img_width = ceil(img_width)

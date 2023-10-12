@@ -18,10 +18,11 @@ def find_first_sequence(files):
     min = math.inf
     for file in files:
         csv = pandas.read_csv(file)
-        csv.sort_values('sequence', inplace=True)
-        current = csv['sequence'][0]
-        if current < min:
-            min = current
+        if 'sequence' in file:
+            csv.sort_values('sequence', inplace=True)
+            current = csv['sequence'][0]
+            if current < min:
+                min = current
 
     return min
 
@@ -39,12 +40,13 @@ if __name__ == '__main__':
     parser.add_argument('--apply', nargs='?', help='apply inplace',
                         default="n")
     args = parser.parse_args()
-    filenames: list[str] = str(args.file).split(",")
+    filenames = str(args.file).split(",")
+
     first = find_first_sequence(filenames)
     kalmans = []
     for filename in filenames:
         # signal_analyzer(filename)
-        _, _, df = prepare_signal(filename, first=first)
+        signal, distance, df = prepare_signal(filename, first=first)
         _mean = function_per_step_inplace(df, mean)
         signal_mean = _mean["rssi"]
 
@@ -61,9 +63,11 @@ if __name__ == '__main__':
         if args.apply == "n":
             plot_signals([df['rssi'], _kalman_signal], [filename, 'Signal Kalman'],
                          ylabel="Signal Kalman",
-                         title="Signal Kalman",
+                         title="Signal vs Signal Kalman Filtered ",
+                         xlabel=" Distance",
+                         xi=distance*4.5
                          )
         else:
             df['rssi'] = _kalman_signal
-            df = df.drop(columns=['distance'], axis=1)
+            #df = df.drop(columns=['distance'], axis=1)
             df.to_csv(filename, encoding='utf-8', index=False)

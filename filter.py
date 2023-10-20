@@ -18,7 +18,7 @@ def find_first_sequence(files):
     min = math.inf
     for file in files:
         csv = pandas.read_csv(file)
-        if 'sequence' in file:
+        if 'sequence' in csv:
             csv.sort_values('sequence', inplace=True)
             current = csv['sequence'][0]
             if current < min:
@@ -26,6 +26,12 @@ def find_first_sequence(files):
 
     return min
 
+
+# for original experiment 4.5 for simulation 1:1 and 1.2 for inferred walking speed latter experiments (1.2 m/s)
+step_meters = 1
+# Only for sequence type, not needed for precise measurements (has distance row instead of sequence)
+# packets per second group by sequence number of n packets 6.6 for samsung s20 150ms intervals, 6.6 per second
+group_by = 6.6
 
 if __name__ == '__main__':
     PATH = r"."
@@ -39,6 +45,8 @@ if __name__ == '__main__':
                         default=",".join(filtered))
     parser.add_argument('--apply', nargs='?', help='apply inplace',
                         default="n")
+    parser.add_argument('--mode', nargs='?', help='apply inplace',
+                        default="kalman")
     args = parser.parse_args()
     filenames = str(args.file).split(",")
 
@@ -46,28 +54,42 @@ if __name__ == '__main__':
     kalmans = []
     for filename in filenames:
         # signal_analyzer(filename)
-        signal, distance, df = prepare_signal(filename, first=first)
+        signal, distance, df = prepare_signal(filename, group_by, first=first)
         _mean = function_per_step_inplace(df, mean)
         signal_mean = _mean["rssi"]
 
+        _median = function_per_step_inplace(df, median)
+        signal_median = _median["rssi"]
+
         _kalman_signal = KalmanFilter(0.01, 10, ).kalman_filter(df['rssi'])
 
-      #  plot_signals([df['rssi']], [filename, 'Signafl'],
-   #                  ylabel="Signal",
-    #                 title="Signal",
-     #                )
-        #plot_signals([signal_mean], [filename, 'Signal Mean'],
-        #             ylabel="Signal Mean",
-        #             title="Signal Mean",
-        #             )
+        #  plot_signals([df['rssi']], [filename, 'Signafl'],
+        #                  ylabel="Signal",
+        #                 title="Signal",
+        #                )
+
         if args.apply == "n":
-            plot_signals([df['rssi'], _kalman_signal], [filename, 'Signal Kalman'],
-                         ylabel="Signal Kalman",
-                         title="Signal vs Signal Kalman Filtered ",
-                         xlabel=" Distance",
-                         xi=distance*4.5
-                         )
+            if args.mode == "kalman":
+                plot_signals([df['rssi'], _kalman_signal], [filename, 'Signal Kalman'],
+                             ylabel="Signal Kalman",
+                             title="Signal vs Signal Kalman Filtered ",
+                             xlabel="Predicted Distance",
+                             xi=distance * step_meters
+                             )
+            else:
+                plot_signals([df['rssi'], _kalman_signal, signal_mean, signal_median],
+                             [filename, 'Signal Kalman', 'Signal Mean', 'Signal Median'],
+                             ylabel="Signal vs Filtering Methods",
+                             xlabel="Predicted Distance",
+                             title="Signal vs Filtering Methods",
+                             xi=distance * step_meters
+                             )
         else:
-            df['rssi'] = _kalman_signal
-            #df = df.drop(columns=['distance'], axis=1)
-            df.to_csv(filename, encoding='utf-8', index=False)
+            if args.mode == "kalman":
+                df['rssi'] = _kalman_signal
+                # df = df.drop(columns=['distance'], axis=1)
+                df.to_csv(filename, encoding='utf-8', index=False)
+            else:
+                df['rssi'] = signal_mean
+                # df = df.drop(columns=['distance'], axis=1)
+                df.to_csv(filename, encoding='utf-8', index=False)

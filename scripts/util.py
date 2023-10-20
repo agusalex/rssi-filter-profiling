@@ -25,9 +25,8 @@ def kalman(data):
     return KalmanFilter().kalman_filter(data)
 
 
-def create_steps(file, first=None):
+def create_steps(file, first=None, group_by=6.6):
     sequence = file['sequence']
-    group_by = 300
     if first is None:
         start = (sequence[0] / group_by)
     else:
@@ -43,11 +42,11 @@ def create_steps(file, first=None):
     return file
 
 
-def prepare_signal(_filename, first=None):
+def prepare_signal(_filename, group_by, first=None):
     file: pd.DataFrame = pd.read_csv(_filename)
     _signal = file['rssi']
     if 'sequence' in file:
-        file = create_steps(file, first)
+        file = create_steps(file, first, group_by)
     _distance = file["distance"]
     return _signal, _distance, file
 
@@ -103,17 +102,17 @@ def find_step_cuts(file):
     return cuttings
 
 
-def find_steps(distance, meters_per_step=1):
+def find_steps(distance):
     steps = [distance[0]]
     index = distance[0]
     for step in distance:
         if step != index:
-            steps.append(step * meters_per_step)
+            steps.append(step)
             index = step
     return steps
 
 
-def fit_parameters(distance, signal, C=0, N=0) -> object:
+def fit_parameters(distance, signal, C=43, N=32) -> object:
     initial_guess = dict(a=C, n=N)
     print(int(C), int(N))
 
@@ -178,9 +177,8 @@ def window(data, w_size):
     return windows
 
 
-def plot_signals(yi, labels, ylabel="Y", xlabel="X", title="RSSI over Distance", xi=None, ):
+def plot_signals(yi, labels, ylabel="Y", xlabel="X", title="RSSI over Distance", xi=None):
     """
-
     Auxiliary function for plotting
 
     input:
@@ -188,12 +186,20 @@ def plot_signals(yi, labels, ylabel="Y", xlabel="X", title="RSSI over Distance",
 
     output:
         - display plot
-
     """
 
+    # Find the length of the smallest dataframe
+    min_len = min(len(y) for y in yi)
+
+    # Trim or slice all dataframes to be of the same minimum size
+    yi = [y[:min_len] for y in yi]
+
     if xi is None:
-        xi = range(len(yi[0]))
-    alphas = [1, 0.45, 0.45, 0.45, 0.45]  # just some opacity values to facilitate visualization
+        xi = range(min_len)
+    else:
+        xi = xi[:min_len]
+
+    alphas = [1] + [0.45 for _ in range(len(yi) - 1)]  # just some opacity values to facilitate visualization
 
     plt.figure()
 

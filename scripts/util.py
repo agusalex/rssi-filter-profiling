@@ -25,7 +25,7 @@ def kalman(data):
     return KalmanFilter().kalman_filter(data)
 
 
-def create_steps(file, first=None, group_by=6.6):
+def create_steps(file, group_by, first=None):
     sequence = file['sequence']
     if first is None:
         start = (sequence[0] / group_by)

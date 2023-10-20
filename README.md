@@ -25,4 +25,4 @@ For example:
 ## Results
 ![first](data/index/output_5_2.png)
 ![first](data/index/output_5_3.png)
-![combined2](data/combined2.png)
+![combined2](data/steps/steps_old/combined2.png)

@@ -63,7 +63,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Filtering strategies for rssi time series')
     parser.add_argument('--file', nargs='?', help='data filename',
-                        default='Device1_kalman.csv,Device2_kalman.csv')
+                        default='192.168.4.2_kalman.csv,'
+                                '192.168.4.3_kalman.csv,'
+                                '192.168.4.4_kalman.csv,'
+                                '192.168.4.6_kalman.csv,'
+                                '192.168.4.8_kalman.csv,'
+                                '192.168.4.9_kalman.csv'
+                        )
     parser.add_argument('--verbose', nargs='?', help='data filename',
                         default=False)
     args = parser.parse_args()
@@ -73,7 +79,6 @@ if __name__ == '__main__':
     logs_canonical = []
     print(filenames)
     for filename in filenames:
-
         signal_mean, graph_xi, log_of_distance_discrete, _A, _n, _residual, log_canonical = signal_profiling(
             filename, args.verbose)
         signals.append(signal_mean)

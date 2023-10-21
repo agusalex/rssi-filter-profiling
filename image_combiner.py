@@ -12,7 +12,7 @@ if __name__ == '__main__':
     images = glob.glob("*.png")
 
     frame_width = 1250
-    images_per_row = 4
+    images_per_row = 2
     padding = 0
 
     img_width, img_height = Image.open(images[0]).size

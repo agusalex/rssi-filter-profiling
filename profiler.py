@@ -8,13 +8,14 @@ from scripts.util import *
 step_meters = 1
 # Only for sequence type measurements, not needed for precise  (has distance row instead of sequence)
 # packets per second group by sequence number of n packets 6.6 for samsung s20 150ms intervals, 6.6 per second
-group_by = 6.6
+group_by = 3.3
 
 
 def signal_profiling(_filename, graph_or_not):
     _signal, _distance, file = prepare_signal(_filename, group_by)
     # find steps
     _steps = np.array(find_steps(_distance.values))
+
     # Apply median filter to raw data in discrete steps
     signal_mean = function_per_step(file, mean)
     # Apply kalman filter to raw data in discrete steps
@@ -63,7 +64,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Filtering strategies for rssi time series')
     parser.add_argument('--file', nargs='?', help='data filename',
-                        default='data/Device1.csv,data/Device2.csv')
+                        default='192.168.4.2.csv,192.168.4.3.csv,192.168.4.4.csv,192.168.4.6.csv,192.168.4.8.csv,192.168.4.9.csv')
+
     parser.add_argument('--verbose', nargs='?', help='data filename',
                         default=False)
     args = parser.parse_args()

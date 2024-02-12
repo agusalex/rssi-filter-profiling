@@ -6,9 +6,15 @@ import pandas
 
 from scripts.util import *
 
+# for original experiment 4.5 for simulation 1:1 and 1.2 for inferred walking speed latter experiments (1.2 m/s)
+step_meters = 1
+# Only for sequence type, not needed for precise measurements (has distance row instead of sequence)
+# packets per second group by sequence number of n packets 6.6 for samsung s20 150ms intervals, 6.6 per second
+group_by = 6.6
+
 
 def signal_analyzer(_filename):
-    _signal, _, file = prepare_signal(_filename)
+    _signal, _, file = prepare_signal(_filename, group_by)
     # Apply median filter to raw data in discrete steps
     _signal_median = function_per_step(file, mean)
     _signal_kalman = KalmanFilter().kalman_filter(_signal_median)
@@ -26,12 +32,6 @@ def find_first_sequence(files):
 
     return min
 
-
-# for original experiment 4.5 for simulation 1:1 and 1.2 for inferred walking speed latter experiments (1.2 m/s)
-step_meters = 1
-# Only for sequence type, not needed for precise measurements (has distance row instead of sequence)
-# packets per second group by sequence number of n packets 6.6 for samsung s20 150ms intervals, 6.6 per second
-group_by = 6.6
 
 if __name__ == '__main__':
     PATH = r"."

@@ -137,7 +137,7 @@ def find_steps(distance):
     return steps
 
 
-def fit_parameters(distance, signal, C=43, N=32) -> object:
+def fit_parameters(distance, signal, C=0, N=0) -> object:
     initial_guess = dict(a=C, n=N)
     print(int(C), int(N))
 

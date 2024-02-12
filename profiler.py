@@ -65,7 +65,6 @@ if __name__ == '__main__':
         description='Filtering strategies for rssi time series')
     parser.add_argument('--file', nargs='?', help='data filename',
                         default='192.168.4.2.csv,192.168.4.3.csv,192.168.4.4.csv,192.168.4.6.csv,192.168.4.8.csv,192.168.4.9.csv')
-
     parser.add_argument('--verbose', nargs='?', help='data filename',
                         default=False)
     args = parser.parse_args()
@@ -74,9 +73,11 @@ if __name__ == '__main__':
     signals = []
     logs_canonical = []
     print(filenames)
+    metadata = pd.DataFrame(columns=['A', 'N', 'Residual', 'Filename'])
     for filename in filenames:
         signal_mean, graph_xi, log_of_distance_discrete, _A, _n, _residual, log_canonical = signal_profiling(
             filename, args.verbose)
+        metadata = metadata.append({'A': _A, 'N': _n, 'Residual': _residual, 'Filename': filename}, ignore_index=True)
         signals.append(signal_mean)
         logs.append(log_of_distance_discrete)
         logs_canonical.append(log_canonical)
@@ -89,7 +90,7 @@ if __name__ == '__main__':
                      ylabel="Signal Mean",
                      xi=graph_xi)
 
-    if len(filenames) > 0:
+    if len(filenames) > 1:
         plot_signals(signals, labels=filenames, title="Signal mean of every device",
                      xlabel="Meters",
                      ylabel="Signal Mean",
@@ -100,6 +101,8 @@ if __name__ == '__main__':
                      ylabel="Signal Mean",
                      xi=graph_xi
                      )
+        metadata.to_csv('metadata.csv', encoding='utf-8', index=False)
+
 #        plot_signals(logs_canonical, labels=filenames, title="Log canonical",
 #                     xlabel="x",
 #                     ylabel="Log"

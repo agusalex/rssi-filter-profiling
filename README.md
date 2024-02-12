@@ -1,4 +1,4 @@
-# Median Filter and Log Fit for RSSI signal prediction on ESP8266
+# Median, mean and Kalman Filter plus Log Fit for RSSI to distance prediction
 
 ## Getting Started
 

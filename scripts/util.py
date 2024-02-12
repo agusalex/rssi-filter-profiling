@@ -25,13 +25,14 @@ def kalman(data):
     return KalmanFilter().kalman_filter(data)
 
 
-def create_steps(file, group_by, first=None):
+
+def create_steps(file, first=None):
     sequence = file['sequence']
     if first is None:
-        start = (sequence[0] / group_by)
+        start = (sequence[0] / 300)
     else:
-        start = first / group_by
-    distance_pre = sequence.apply(lambda x: round(round(x / group_by) - start + 1))
+        start = first / 300
+    distance_pre = sequence.apply(lambda x: round(round(x / 300) - start + 1))
     if "node" in file:
         file_edited = pd.DataFrame(
             {"distance": distance_pre, "rssi": file['rssi'], "node": file["node"], "sequence": file["sequence"]})
@@ -42,11 +43,35 @@ def create_steps(file, group_by, first=None):
     return file
 
 
+def create_steps_by_index(file, first=None, group_by=6.6):
+    sequence = file['sequence']
+    if first is None:
+        start = (sequence[0])
+    else:
+        start = first
+    buckets = []
+    length = len(sequence)
+    bucket_max = length // group_by
+
+    for i in range(length):
+        step = round( (i  * bucket_max) / length) + 1
+        buckets.append(step)
+
+    if "node" in file:
+        file_edited = pd.DataFrame(
+            {"distance": buckets, "rssi": file['rssi'], "node": file["node"], "sequence": file["sequence"]})
+    else:
+        file_edited = pd.DataFrame({"distance": buckets, "rssi": file['rssi']})
+    _distance = file_edited["distance"]
+    file: pd.DataFrame = file_edited
+    return file
+
+
 def prepare_signal(_filename, group_by, first=None):
     file: pd.DataFrame = pd.read_csv(_filename)
     _signal = file['rssi']
     if 'sequence' in file:
-        file = create_steps(file, first, group_by)
+        file = create_steps(file, first)
     _distance = file["distance"]
     return _signal, _distance, file
 

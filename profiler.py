@@ -4,20 +4,24 @@ import lmfit as lmfit
 import pandas as pd
 from scripts.util import *
 
-# for original experiment 4.5 for simulation 1:1 and 1.2 for inferred walking speed latter experiments (1.2 m/s)
-step_meters = 1
+# for original experiment 4.5 for simulation 1:1
+step_meters = 3
+# 1.2 for inferred walking speed latter experiments (1.2 m/s) ?? 3 is the correct one
 # Only for sequence type measurements, not needed for precise  (has distance row instead of sequence)
 # packets per second group by sequence number of n packets 6.6 for samsung s20 150ms intervals, 6.6 per second
-group_by = 3.3
+group_by = 6.6
 
 
 def signal_profiling(_filename, graph_or_not):
     _signal, _distance, file = prepare_signal(_filename, group_by)
+
     # find steps
     _steps = np.array(find_steps(_distance.values))
 
     # Apply median filter to raw data in discrete steps
     signal_mean = function_per_step(file, mean)
+    signal_sdev_pos = function_per_step(file, sdev(1))
+    signal_sdev_neg = function_per_step(file, sdev(-1))
     # Apply kalman filter to raw data in discrete steps
     # _signal_kalman = function_per_step(file, kalman)
     # Fit Logarithmic curve of signal loss to median and find c and n
@@ -36,6 +40,14 @@ def signal_profiling(_filename, graph_or_not):
                      ylabel="Signal",
                      title="RSSI vs Distance",
                      xi=_distance * step_meters)
+        plot_signals([signal_mean, signal_sdev_pos, signal_sdev_neg], [filename, 'stdev+', 'stdev-'],
+                     title="RSSI Mean and stdev vs Distance "
+                           f"A= {str(round(_A))}"
+                           f" N= {str(round(_n))}"
+                           f" R%={str(round(_residual))}",
+                     xlabel="Meters",
+                     ylabel="Signal Mean",
+                     xi=_distance.unique() * step_meters)
         plot_signals([signal_mean, _log_of_distance_discrete], [filename, 'log_regression'],
                      title="RSSI Mean and Log fit vs Distance "
                            f"A= {str(round(_A))}"
@@ -64,7 +76,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Filtering strategies for rssi time series')
     parser.add_argument('--file', nargs='?', help='data filename',
-                        default='192.168.4.2.csv,192.168.4.3.csv,192.168.4.4.csv,192.168.4.6.csv,192.168.4.8.csv,192.168.4.9.csv')
+                        default='192.168.4.2_kalman.csv,192.168.4.3_kalman.csv,192.168.4.4_kalman.csv,192.168.4.6_kalman.csv,192.168.4.8_kalman.csv,192.168.4.9_kalman.csv')
     parser.add_argument('--verbose', nargs='?', help='data filename',
                         default=False)
     args = parser.parse_args()

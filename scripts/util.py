@@ -17,6 +17,13 @@ def mean(step):
     return [statistics.mean(step)]
 
 
+def sdev(sign):
+    def inner(step):
+        return [statistics.mean(step) + statistics.stdev(step) * sign]
+
+    return inner
+
+
 def median_kalman(step):
     return [statistics.median(KalmanFilter().kalman_filter(step))]
 
@@ -54,7 +61,7 @@ def create_steps_by_index(file, first=None, group_by=6.6):
     bucket_max = length // group_by
 
     for i in range(length):
-        step = round( (i  * bucket_max) / length) + 1
+        step = round((i * bucket_max) / length) + 1
         buckets.append(step)
 
     if "node" in file:

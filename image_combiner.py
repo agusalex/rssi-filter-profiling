@@ -39,4 +39,4 @@ if __name__ == '__main__':
         j += 1
 
     new_im.show()
-    new_im.save("out.jpg", "JPEG", quality=80, optimize=True, progressive=True)
+    new_im.save("out.png", "PNG", quality=80, optimize=True, progressive=True)

@@ -7,7 +7,7 @@ import pandas
 from scripts.util import *
 
 # for original experiment 4.5 for simulation 1:1 and 1.2 for inferred walking speed latter experiments (1.2 m/s)
-step_meters = 1
+step_meters = 4.5
 # Only for sequence type, not needed for precise measurements (has distance row instead of sequence)
 # packets per second group by sequence number of n packets 6.6 for samsung s20 150ms intervals, 6.6 per second
 group_by = 6.6

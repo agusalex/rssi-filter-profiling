@@ -40,7 +40,8 @@ def signal_profiling(_filename, graph_or_not):
                      ylabel="Signal",
                      title="RSSI vs Distance",
                      xi=_distance * step_meters)
-        plot_signals([signal_mean, signal_sdev_pos, signal_sdev_neg], [filename, 'stdev+', 'stdev-'],
+        plot_signals([signal_mean, _log_of_distance_discrete, signal_sdev_pos, signal_sdev_neg],
+                     [filename, 'log_regression', 'stdev+', 'stdev-'],
                      title="RSSI Mean and stdev vs Distance "
                            f"A= {str(round(_A))}"
                            f" N= {str(round(_n))}"
@@ -76,9 +77,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Filtering strategies for rssi time series')
     parser.add_argument('--file', nargs='?', help='data filename',
-                        default='192.168.4.2_kalman.csv,192.168.4.3_kalman.csv,192.168.4.4_kalman.csv,192.168.4.6_kalman.csv,192.168.4.8_kalman.csv,192.168.4.9_kalman.csv')
+                        default='192.168.4.4.csv')
     parser.add_argument('--verbose', nargs='?', help='data filename',
-                        default=False)
+                        default=True)
     args = parser.parse_args()
     filenames = str(args.file).split(",")
     logs = []

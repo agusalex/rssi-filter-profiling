@@ -24,13 +24,13 @@ class KalmanFilter:
     cov = float('nan')
     x = float('nan')
 
-    def __init__(self, R=0.008, Q=0.1, A=1):
+    def __init__(self, R=0.01, Q=20, A=2):
         """
         Constructor
         :param R: Process Noise
         :param Q: Measurement Noise
         """
-        self.A = 1
+        self.A = A
         self.B = 0
         self.C = 1
 
